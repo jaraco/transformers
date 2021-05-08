@@ -1,7 +1,9 @@
 ```python
-from typing import Optional
+from typing import Optional, Iterable, Union
 class backports:
     transforming_annotations = lambda func: func
+class Item: pass
+always_iterable = lambda: None
 ```
 
 # Problem
@@ -171,3 +173,30 @@ This last option probably has the most compatibility concerns, but would allow c
 - Has this approach been considered previously (where)?
 - Are there other challenges I haven't recognized?
 - Other feedback or questions?
+
+# Other examples
+
+## always iterable
+
+Consider the following common case where a parameter can be a single item or an iterable of items.
+
+
+```python
+def process(item: Item):
+    "stubbed"
+    
+def process_items(item_or_items: Optional[Union[Item, Iterable[Item]]]):
+    if item_or_items is None:
+        item_or_items = []
+    if not hasattr(item_or_items, '__iter__'):
+        item_or_items = [item_or_items]
+    return (process(item) for item in item_or_items)
+```
+
+The first four lines of `process_items` (or some variation of that) can be found many places and is common enough that [more_itertools implements that behavior](https://more-itertools.readthedocs.io/en/stable/api.html#more_itertools.always_iterable). Applying that functionality, the code could be implemented thus:
+
+
+```python
+def process_items(items: always_iterable):
+    return (process(item) for item in items)
+```
